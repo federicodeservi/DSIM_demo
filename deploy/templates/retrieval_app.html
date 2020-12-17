@@ -51,13 +51,16 @@
             </div>
         </div>
         <div class="main-container height-100" style=";background: linear-gradient(to right, #134e5e, #71b280);    height: -webkit-fill-available; width: -webkit-fill-available;"> 
-            <section class="switchable cover cover-features imagebg space--lg" data-overlay="2" >
+            <section class="switchable cover cover-features imagebg" data-overlay="2" >
                 <div class="container">
                     <div class="row justify-content-between">
                         <div class="col-lg-5 col-md-7">
                             <div class="mt--2">
-                                <h1> Retrieval </h1>
-                                <p class="lead"> Stack offers a clean and contemporary look to suit a range of purposes from corporate, tech startup, marketing site to digital storefront. </p>
+                                <h1 style="font-weight: 600"> Image Search </h1>
+                                <p  class="lead" style="font-weight:600; font-size:1.6em; margin-bottom:5px"> Upload a picture of an animal to search the 9 most similar photos from our database! </p>
+                                <p>Allowed species are: "buffalo", "moose", "deer", "horse", "weasel", "sheep", "chimpanzee", "lion", "raccoon", "fox"</p>
+
+                                
                                 <form id="upload-file" method="post" enctype="multipart/form-data" style="padding-bottom:1.5em; padding_left:4em">
                                     <label for="imageUploadretr" class="btn btn--lg btn--primary type--uppercase" style="background: #fff; border-color: #4a90e2;color:#2374ab; font-size: 1.2em; font-weight: 700; width:100%">
                                         Choose file
@@ -68,7 +71,7 @@
                                 <button type="button" class="btn btn--lg  type--uppercase" id="btn-retrieval" style="background: #fff; border-color: #4a90e2;color:#2374ab;width:100%; padding-left:0em; padding-right:0em">Search!</button></span> 
                                 <div class="loader" style="display:none; padding-top:1em"><div></div><div></div><div></div><div></div></div></div></div>
                             <div class="col-lg-5 col-md-7 col-12">
-                            <div class="image-section">
+                            <div class="image-section" style="display: none;">
                                 <div class="img-preview">
                                     <div id="imagePreview">
                                     </div>

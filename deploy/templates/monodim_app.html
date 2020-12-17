@@ -57,8 +57,9 @@
                     <div class="row justify-content-between">
                         <div class="col-lg-5 col-md-7">
                             <div class="mt--2">
-                                <h1> Who's making that noise? </h1>
-                                <p class="lead"> Upload one of the wav audio files in the test folder to predict which animal made that noise! </p>
+                                <h1  style="font-weight: 600"> Who's making that noise? </h1>
+                                <p class="lead" style="font-weight:600; font-size:1.6em; margin-bottom:5px"> Upload a wav audio files of an animal sound to predict which animal made that noise!*</p>
+                                <p>Allowed species are: "buffalo", "moose", "deer", "horse", "weasel", "sheep", "chimpanzee", "lion", "raccoon", "fox"</p>
 
                                 <form id="upload-file" method="post" enctype="multipart/form-data" style="padding-bottom:1.5em; padding_left:4em">
                                     <label for="audioUpload" class="btn btn--lg btn--primary type--uppercase" style="color:#2374ab; font-size: 1.2em; font-weight: 700; width:100%">
@@ -73,7 +74,7 @@
                             
                         </div>
                         <div class="col-lg-7 col-md-5 col-12">
-                            <div class="image-section">
+                            <div class="image-section" style="display: none;">
                                 <div class="img-preview">
                                     <div id="audioPreview" style="background-image: url('../static/images/audiosearch.svg');">
                                     </div>
