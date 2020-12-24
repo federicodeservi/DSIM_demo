@@ -1,27 +1,27 @@
-import os
+#Import libraries
+
+import os, shutil
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from keras.applications.vgg16 import preprocess_input, decode_predictions
-from keras.models import load_model
-from keras.preprocessing.image import img_to_array, load_img
-from flask import Flask, redirect, url_for, request, render_template
 import tensorflow_hub as hub
-from tensorflow.keras.applications import resnet50
+from tensorflow import keras
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tensorflow.keras.preprocessing import image as kimage
+from tensorflow.keras.applications import resnet
 from tensorflow.keras.layers.experimental import preprocessing
+import librosa
+from pathlib import Path
+import random
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
-import numpy as np
 from matplotlib import cm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import librosa
-from pathlib import Path
-import os, shutil
-import random
-from tensorflow.keras.preprocessing import image as kimage
 plt.ioff()
+
 # Flask utils
+from flask import Flask, redirect, url_for, request, render_template
 from flask import Flask, redirect, url_for, request, render_template
 from werkzeug.utils import secure_filename
 from gevent.pywsgi import WSGIServer
@@ -33,31 +33,41 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # define a Flask app
 app = Flask(__name__)
 
-######### MONODIM ##################################################
 
-# MONDOIM MODEL DEFINITION
+# Import basemodel for all of our tasks
 
-base_net = resnet50.ResNet50(weights="imagenet", include_top=False,
+base_net = resnet.ResNet101(weights="imagenet", include_top=False,
 	input_shape=(224, 224, 3), pooling="avg")
+
+
+# MONODIMENSIONAL TASK
+
+# Model definition
+
 for layer in base_net.layers:
     layer.trainable = False
-# Output of the base_net model
+
 x = base_net.output
-# intermediate fully-connected layer + ReLU
-x = keras.layers.Dense(512, activation='relu')(x)
-# final fully-connected layer + SoftMax 
-pred = keras.layers.Dense(10, activation='softmax')(x)
+x = keras.layers.Dropout(0.5)(x)
+x = keras.layers.ReLU()(x)
+x = keras.layers.BatchNormalization()(x)
+x = keras.layers.Dense(200, activation='relu', kernel_regularizer=regularizers.l2(l2=0.0005))(x)
+x = keras.layers.Dropout(0.5)(x)
+x = keras.layers.ReLU()(x)
+x = keras.layers.BatchNormalization()(x)
+pred = keras.layers.Dense(n_classes, activation='softmax')(x)
 
 MODELAUDIO = keras.Model(inputs=base_net.input, outputs=pred)
+
 MODELAUDIO.compile(loss=keras.losses.categorical_crossentropy,
             optimizer=keras.optimizers.Adam(),
             metrics=['accuracy'])
-MODELAUDIO.load_weights('monodim_weights')
 
+MODELAUDIO.load_weights('monodim_weights')
 
 print('Successfully loaded model...')
 
-# PREPROCESSING FUNCTION
+# Preprocessing functions
 
 def decode_audio(audio_binary):
   audio, _ = tf.audio.decode_wav(audio_binary)
@@ -68,7 +78,6 @@ def get_waveform(file_path):
   waveform = decode_audio(audio_binary)
   return waveform, audio_binary
 
-
 frame_length = 2048
 frame_step = 512
 num_mel_bins = 75
@@ -77,34 +86,20 @@ fmin = 0.0
 sample_rate = 44100
 fmax = sample_rate / 2
 
-
 def get_spectrogram(waveform):
-    # Padding for files with less than 16000 samples
-    #zero_padding = tf.zeros([140000] - tf.shape(waveform), dtype=tf.float32) # NON SUPERARE I 3 SECONDI CON TIME STRETCH
-    # Concatenate audio with padding so that all audio clips will be of the 
-    # same length
     waveform = tf.cast(waveform, tf.float32)
     equal_length = waveform
     magnitude_spectrograms  = tf.signal.stft(
       equal_length, frame_length, frame_step)
     magnitude_spectrograms  = tf.abs(magnitude_spectrograms)
-    
-    # Step: magnitude_spectrograms->mel_spectrograms
-    # Warp the linear-scale, magnitude spectrograms into the mel-scale.
     num_spectrogram_bins = magnitude_spectrograms.shape[-1]
-
-
     linear_to_mel_weight_matrix = tf.signal.linear_to_mel_weight_matrix(
         num_mel_bins, num_spectrogram_bins, sample_rate, fmin,
         fmax)
-
     mel_spectrograms = tf.tensordot(
         magnitude_spectrograms, linear_to_mel_weight_matrix, 1)
-
     mel_spectrograms.set_shape(magnitude_spectrograms.shape[:-1].concatenate(
   linear_to_mel_weight_matrix.shape[-1:]))
-
-    # Compute a stabilized log to get log-magnitude mel-scale spectrograms.
     log_mel_spectrograms = tf.math.log(mel_spectrograms + 1e-6)
 
     return log_mel_spectrograms
@@ -117,7 +112,7 @@ def draw_spectrogram(spectrogram, output_dir_path, i):
     fig.savefig(f'{output_dir_path}/to_predict/mel_{i}.png', bbox_inches='tight', pad_inches=0, dpi=300)
     plt.close()
 
-# PREDICT FUNCTION
+# Predict function
 
 def model_predict_audio(img_path, model):
     audio_p = "upload"
@@ -142,7 +137,7 @@ def model_predict_audio(img_path, model):
     
     return predicted_labels
 
-# DEFINE ROUTES
+# Define flask routes
 
 @app.route('/predict_audio', methods=['GET', 'POST'])
 def upload_audio():
@@ -166,8 +161,6 @@ def upload_audio():
         # save the file to ./uploads
         basepath = os.path.abspath(os.path.dirname(__file__))
         filepath = os.path.join("upload/to_predict", f.filename) 
-
-         
 
         mel_path = "upload/to_predict/mel_1.png"
         print(filepath)
@@ -199,27 +192,23 @@ def upload_audio():
     return None
 
 
-######### BIDIM ##################################################
+# BIDIMENSIONAL TASK
 
-#BIDIM MODEL DEFINITION
+# Model definition
 
-base_net_bdim = resnet50.ResNet50(weights="imagenet", include_top=False,
-	input_shape=(224, 224, 3), pooling="avg")
-for layer in base_net_bdim.layers:
-    layer.trainable = False
-# Output of the base_net model
-x = base_net_bdim.output
-# intermediate fully-connected layer + ReLU
-x = tf.keras.layers.Dense(1024, activation='relu')(x)
-# final fully-connected layer + SoftMax 
-pred = tf.keras.layers.Dense(10, activation='softmax')(x)
-MODELIMAGE = tf.keras.Model(inputs=base_net_bdim.input, outputs=pred)
+x = base_net.output
+x = keras.layers.BatchNormalization()(x)
+x = keras.layers.Dense(50, activation='relu', kernel_regularizer=regularizers.l2(l2=0.0005))(x)
+x = keras.layers.BatchNormalization()(x)
+pred_audio = keras.layers.Dense(10, activation='softmax')(x)
+
+MODELIMAGE = tf.keras.Model(inputs=base_net.input, outputs=pred_audio)
+
 MODELIMAGE.load_weights('bidim_weights')
-
 
 print('Successfully loaded model...')
 
-#PREDICTION FUNCTION
+# Prediction function
 
 def model_predict_image(img_path, model):
     '''
@@ -247,7 +236,7 @@ def model_predict_image(img_path, model):
     
     return predicted_labels
 
-#PREDICT ROUTE
+# Flask routes
 
 @app.route('/predict_image', methods=['GET', 'POST'])
 def upload_image():
@@ -291,44 +280,27 @@ def upload_image():
     return None
 
 
-
-######### RETRIEVAL ################################################
-
+# RETRIEVAL 
 
 
-my_resnet50 = resnet50.ResNet50(include_top = False, weights='imagenet',
-                       pooling = 'max', input_shape=(224,224,3))
+#my_resnet = resnet.ResNet101(include_top = False, weights='imagenet',
+#                       pooling = 'max', input_shape=(224,224,3))
 
 def resnet50_features(img, net):
-    '''
-      Takes an image in order to extract the features of resnet50
-      @params:
-        - img: image to compute
-        - net: neural network to use
-    '''
-    x = kimage.img_to_array(img) # to numpy
-    x = resnet50.preprocess_input(x) # preprocess for network
-    x = np.expand_dims(x, axis=0) # necessario per la rete
+    x = kimage.img_to_array(img) 
+    x = resnet.preprocess_input(x) 
+    x = np.expand_dims(x, axis=0) 
     features = net.predict(x).flatten()
     return features
 
-# Limit number of loaded images
-maximg_class = 200 # 200 img per ogni classe
+maximg_class = 200 
 
 classes = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee",
            "lion", "raccoon", "fox"]
 
 # Data loader
+
 def load_data(base_path, net, feature_extractor=resnet50_features):
-    '''
-      Load image database features by applying feature extraction of a neural network
-      @params:
-        - base_path: path where folders of classes of images are stored
-        - feature_extractor: function that extracts features on a image
-        - preprocess_fuction: function to apply to image in order to insert it 
-              in the neural network
-        - net: neural network to apply
-    '''
     paths = []
     features = []
 
@@ -349,15 +321,17 @@ def load_data(base_path, net, feature_extractor=resnet50_features):
     return features, paths
 
 
-jpg_path = f"retrieval/images_animals10_small/" # PATH DELLE IMMAGINI
-_, paths = load_data(jpg_path, feature_extractor=resnet50_features, net = my_resnet50)
+jpg_path = f"retrieval/images_animals10_small/"
+_, paths = load_data(jpg_path, feature_extractor=resnet50_features, net = base_net)
 
-# Load saved features PATH DOVE HO SALVATO LO SPAZIO DI FEATURES
+# Load saved features
 X_train = np.load("retrieval/features_resnet50.npy")
 
 from sklearn.neighbors import KDTree
+
 tree = KDTree(X_train)
 
+# Flask routes
 
 @app.route('/retrieval', methods=['GET', 'POST'])
 def upload_image_retrieval():
@@ -410,7 +384,7 @@ def upload_image_retrieval():
         # PATH PER QUERY IMAGE
         query_image = kimage.load_img(filepath, target_size=(224, 224, 3))
         print("saved")
-        query_features = resnet50_features(query_image, my_resnet50)
+        query_features = resnet50_features(query_image, base_net)
         print("saved")
         query_features = np.expand_dims(query_features, axis = 0)
         print("saved")
@@ -450,12 +424,9 @@ def upload_image_retrieval():
     
     return None
 
+##################################
 
-
-###################################################################
-
-
-#RENDER TEMAPLATES ROUTES
+# RENDER TEMAPLATES ROUTES
 
 @app.route('/', methods=['GET'])
 def home():
@@ -473,7 +444,7 @@ def image():
 def retrieval():
     return render_template('retrieval_app.html')
 
-#RUN ON PORT 5000
+# RUN ON PORT 5000
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
