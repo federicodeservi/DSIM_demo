@@ -117,7 +117,7 @@ def draw_spectrogram(spectrogram, output_dir_path, i):
 def model_predict_audio(img_path, model):
     audio_p = "upload"
 
-    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet50.preprocess_input)
+    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet.preprocess_input)
 
     test_generator = test_datagen.flow_from_directory(
         audio_p,
@@ -215,7 +215,7 @@ def model_predict_image(img_path, model):
         helper method to process an uploaded image
     '''
     img_p = "upload"
-    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet50.preprocess_input)
+    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet.preprocess_input)
 
     test_generator = test_datagen.flow_from_directory(
         img_p,
@@ -229,7 +229,7 @@ def model_predict_image(img_path, model):
     print(len(test))
     tf_model_predictions = model.predict(test)
     tf_pred_dataframe = pd.DataFrame(tf_model_predictions)
-    tf_pred_dataframe.columns = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee", "lion", "raccoon", "fox"]  #Qui specifichi l'etichetta che ti printa dopo il modello
+    tf_pred_dataframe.columns = ['buffalo', 'chimpanzee', 'deer' ,'fox' ,'horse' ,'lion' ,'moose' ,'otter','raccoon' ,'sheep']  #Qui specifichi l'etichetta che ti printa dopo il modello
     predicted_ids = np.argmax(tf_model_predictions, axis=-1)
     predicted_labels = tf_pred_dataframe.columns[predicted_ids]
     print(predicted_labels)
@@ -312,8 +312,8 @@ def load_data(base_path, net, feature_extractor=resnet_features):
           cur_path = cur_fold + f
           paths.append(cur_path)
           
-        if (file_n > maximg_class) :
-          break
+        #if (file_n > maximg_class) :
+        #  break
           
       print(f"{fold} DONE")
 
