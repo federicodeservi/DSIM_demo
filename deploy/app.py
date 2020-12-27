@@ -51,7 +51,7 @@ x = base_net.output
 x = keras.layers.Dropout(0.5)(x)
 x = keras.layers.ReLU()(x)
 x = keras.layers.BatchNormalization()(x)
-x = keras.layers.Dense(200, activation='relu', kernel_regularizer=regularizers.l2(l2=0.0005))(x)
+x = keras.layers.Dense(200, activation='relu', kernel_regularizer=regularizers.l2(0.0005))(x)
 x = keras.layers.Dropout(0.5)(x)
 x = keras.layers.ReLU()(x)
 x = keras.layers.BatchNormalization()(x)
@@ -198,7 +198,7 @@ def upload_audio():
 
 x = base_net.output
 x = keras.layers.BatchNormalization()(x)
-x = keras.layers.Dense(50, activation='relu', kernel_regularizer=regularizers.l2(l2=0.0005))(x)
+x = keras.layers.Dense(50, activation='relu', kernel_regularizer=regularizers.l2(0.0005))(x)
 x = keras.layers.BatchNormalization()(x)
 pred_audio = keras.layers.Dense(10, activation='softmax')(x)
 
@@ -293,8 +293,6 @@ def resnet_features(img, net):
     features = net.predict(x).flatten()
     return features
 
-# maximg_class = 200 
-
 classes = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee",
            "lion", "raccoon", "fox"]
 
@@ -312,8 +310,6 @@ def load_data(base_path, net, feature_extractor=resnet_features):
           cur_path = cur_fold + f
           paths.append(cur_path)
           
-        #if (file_n > maximg_class) :
-        #  break
           
       print(f"{fold} DONE")
 
