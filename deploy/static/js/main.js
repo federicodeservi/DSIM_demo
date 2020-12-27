@@ -17,15 +17,27 @@ $(document).ready(function () {
             reader.onload = function (e) {
                 $('#imagePreview').css('background-image', 'url(' + e.target.result + ')');
                 $('.imagePreview').hide();
-                
                 $('.audioPreview').hide();
                 $('#btn-predict-image').show();
                 $('#btn-predict-audio').show();
                 $('#btn-retrieval').show();
                 $('#imagePreview').fadeIn(650);
                 $('#audioPreview').fadeIn(650);
+                $('#imagePreview1').hide();
+                $('#imagePreview2').hide();
+                $('#imagePreview3').hide();
+                $('#imagePreview4').hide();
+                $('#imagePreview5').hide();
+                $('#imagePreview6').hide();
+                $('#imagePreview7').hide();
+                $('#imagePreview8').hide();
+                $('#imagePreview9').hide();
             }
             reader.readAsDataURL(input.files[0]);
+            var file = input.files[0]
+            if (file){
+            console.log(file.name);
+            }
             
         }
     }
@@ -129,15 +141,25 @@ $(document).ready(function () {
                 console.log("loading");
                 $('.loader').hide();
                 $('.results').fadeIn(600);
-                $('#imagePreview1').html('<img src="/static/results/out_1.png">');
-                $('#imagePreview2').html('<img src="/static/results/out_2.png">');
-                $('#imagePreview3').html('<img src="/static/results/out_3.png">');
-                $('#imagePreview4').html('<img src="/static/results/out_4.png">');
-                $('#imagePreview5').html('<img src="/static/results/out_5.png">');
-                $('#imagePreview6').html('<img src="/static/results/out_6.png">');
-                $('#imagePreview7').html('<img src="/static/results/out_7.png">');
-                $('#imagePreview8').html('<img src="/static/results/out_8.png">');
-                $('#imagePreview9').html('<img src="/static/results/out_9.png">');
+                d = new Date();
+                $('#imagePreview1').attr('src' , "/static/results/out_1.png?"+d.getTime());
+                $('#imagePreview2').attr('src' , "/static/results/out_2.png?"+d.getTime());
+                $('#imagePreview3').attr('src' , "/static/results/out_3.png?"+d.getTime());
+                $('#imagePreview4').attr('src' , "/static/results/out_4.png?"+d.getTime());
+                $('#imagePreview5').attr('src' , "/static/results/out_5.png?"+d.getTime());
+                $('#imagePreview6').attr('src' , "/static/results/out_6.png?"+d.getTime());
+                $('#imagePreview7').attr('src' , "/static/results/out_7.png?"+d.getTime());
+                $('#imagePreview8').attr('src' , "/static/results/out_8.png?"+d.getTime());
+                $('#imagePreview9').attr('src' , "/static/results/out_9.png?"+d.getTime());
+                $('#imagePreview1').fadeIn(600);
+                $('#imagePreview2').fadeIn(600);
+                $('#imagePreview3').fadeIn(600);
+                $('#imagePreview4').fadeIn(600);
+                $('#imagePreview5').fadeIn(600);
+                $('#imagePreview6').fadeIn(600);
+                $('#imagePreview7').fadeIn(600);
+                $('#imagePreview8').fadeIn(600);
+                $('#imagePreview9').fadeIn(600);
                 console.log('Success!');
             },
         });

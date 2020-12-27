@@ -3,13 +3,13 @@
 import os, shutil
 import numpy as np
 import tensorflow as tf
-import tensorflow_hub as hub
 from tensorflow import keras
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array, load_img
 from tensorflow.keras.preprocessing import image as kimage
 from tensorflow.keras.applications import resnet
 from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import regularizers
 import librosa
 from pathlib import Path
 import random
@@ -55,7 +55,7 @@ x = keras.layers.Dense(200, activation='relu', kernel_regularizer=regularizers.l
 x = keras.layers.Dropout(0.5)(x)
 x = keras.layers.ReLU()(x)
 x = keras.layers.BatchNormalization()(x)
-pred = keras.layers.Dense(n_classes, activation='softmax')(x)
+pred = keras.layers.Dense(10, activation='softmax')(x)
 
 MODELAUDIO = keras.Model(inputs=base_net.input, outputs=pred)
 
@@ -117,7 +117,7 @@ def draw_spectrogram(spectrogram, output_dir_path, i):
 def model_predict_audio(img_path, model):
     audio_p = "upload"
 
-    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet50.preprocess_input)
+    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet.preprocess_input)
 
     test_generator = test_datagen.flow_from_directory(
         audio_p,
@@ -215,7 +215,7 @@ def model_predict_image(img_path, model):
         helper method to process an uploaded image
     '''
     img_p = "upload"
-    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet50.preprocess_input)
+    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(preprocessing_function=resnet.preprocess_input)
 
     test_generator = test_datagen.flow_from_directory(
         img_p,
@@ -229,7 +229,7 @@ def model_predict_image(img_path, model):
     print(len(test))
     tf_model_predictions = model.predict(test)
     tf_pred_dataframe = pd.DataFrame(tf_model_predictions)
-    tf_pred_dataframe.columns = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee", "lion", "raccoon", "fox"]  #Qui specifichi l'etichetta che ti printa dopo il modello
+    tf_pred_dataframe.columns = ['buffalo', 'chimpanzee', 'deer' ,'fox' ,'horse' ,'lion' ,'moose' ,'otter','raccoon' ,'sheep']  #Qui specifichi l'etichetta che ti printa dopo il modello
     predicted_ids = np.argmax(tf_model_predictions, axis=-1)
     predicted_labels = tf_pred_dataframe.columns[predicted_ids]
     print(predicted_labels)
@@ -286,7 +286,7 @@ def upload_image():
 #my_resnet = resnet.ResNet101(include_top = False, weights='imagenet',
 #                       pooling = 'max', input_shape=(224,224,3))
 
-def resnet50_features(img, net):
+def resnet_features(img, net):
     x = kimage.img_to_array(img) 
     x = resnet.preprocess_input(x) 
     x = np.expand_dims(x, axis=0) 
@@ -300,7 +300,7 @@ classes = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee",
 
 # Data loader
 
-def load_data(base_path, net, feature_extractor=resnet50_features):
+def load_data(base_path, net, feature_extractor=resnet_features):
     paths = []
     features = []
 
@@ -312,8 +312,8 @@ def load_data(base_path, net, feature_extractor=resnet50_features):
           cur_path = cur_fold + f
           paths.append(cur_path)
           
-        if (file_n > maximg_class) :
-          break
+        #if (file_n > maximg_class) :
+        #  break
           
       print(f"{fold} DONE")
 
@@ -322,10 +322,10 @@ def load_data(base_path, net, feature_extractor=resnet50_features):
 
 
 jpg_path = f"retrieval/images_animals10_small/"
-_, paths = load_data(jpg_path, feature_extractor=resnet50_features, net = base_net)
+_, paths = load_data(jpg_path, feature_extractor=resnet_features, net = base_net)
 
 # Load saved features
-X_train = np.load("retrieval/features_resnet50.npy")
+X_train = np.load("retrieval/features_resnet101.npy")
 
 from sklearn.neighbors import KDTree
 
@@ -384,7 +384,7 @@ def upload_image_retrieval():
         # PATH PER QUERY IMAGE
         query_image = kimage.load_img(filepath, target_size=(224, 224, 3))
         print("saved")
-        query_features = resnet50_features(query_image, base_net)
+        query_features = resnet_features(query_image, base_net)
         print("saved")
         query_features = np.expand_dims(query_features, axis = 0)
         print("saved")
