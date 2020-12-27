@@ -293,7 +293,7 @@ def resnet_features(img, net):
     features = net.predict(x).flatten()
     return features
 
-maximg_class = 200 
+# maximg_class = 200 
 
 classes = ["buffalo", "moose", "deer", "horse", "otter", "sheep", "chimpanzee",
            "lion", "raccoon", "fox"]
