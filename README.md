@@ -26,4 +26,6 @@ cd deploy
 python app.py
 ```
 
+Then wait for it to compile and run and then go to your browser and open http://127.0.0.1:5000/
+
 NB! The dataset used in the demo and the weights of the models included are not published here, and can be found [here](https://github.com/federicodeservi/DSIM_project).
